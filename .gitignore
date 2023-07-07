@@ -5,3 +5,7 @@
 build
 /.settings/
 /.project
+.DS_Store
+.gitattributes
+.serverless/
+app/bin/

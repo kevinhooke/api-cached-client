@@ -32,7 +32,14 @@ java {
     }
 }
 
+task buildZip(type: Zip) {
+    into('lib') {
+        from(jar)
+        from(configurations.runtimeClasspath)
+    }
+}
+
 application {
     // Define the main class for the application.
-    mainClass = 'kh.apiclient.App'
+    mainClass = 'kh.apiclient.ApiCachedClient'
 }
