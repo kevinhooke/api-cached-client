@@ -14,7 +14,8 @@ public class ApiCachedClient implements RequestHandler<Map<String,String>, Strin
 	@Override
 	public String handleRequest(Map<String, String> input, Context context) {
 		LambdaLogger logger = context.getLogger();
-		logger.log("ApiCachedClient invoked");
+		String apiUrl = System.getenv("API_URL");
+		logger.log("ApiCachedClient invoked, API_URL: " + apiUrl);
 		
 		return null;
 	}
