@@ -49,7 +49,7 @@ public class SunspotServiceImplTest {
 		SunspotServiceImpl impl = new SunspotServiceImpl();
 		String result = impl.retreive("https://services.swpc.noaa.gov/text/sgas.txt");
 		
-		System.out.println("test result: " + result);
+		//System.out.println("test result: " + result);
 		assertTrue(result.startsWith(":Product: Solar and Geophysical Activity Summary"));
 	}
 
