@@ -1,6 +1,6 @@
 service: apiCachedClient
 package:
-  artifact: app/build/distributions/app.zip
+  artifact: app/build/libs/app.jar
   
 provider:
   name: aws

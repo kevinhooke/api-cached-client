@@ -9,10 +9,36 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 
+import kh.apiclient.service.ApiCachedClientService;
+import kh.apiclient.service.impl.SunspotServiceImpl;
+
+/**
+ * AWS Lambda to call an api and retain response in a static as a simple cache to avoid
+ * calling remote api on every Lambda call.
+ * 
+ * Relies on Lambda instance remaining alive for some time before it is terminated,
+ * so that subsequent calls while warm can return cached value from the static property.
+ * 
+ * If static property is null (new Lambda instance started or cold started), then 
+ * re-read response from remote api and re-cache.
+ * 
+ * @author kevinhooke
+ */
 public class ApiCachedClient implements RequestHandler<Map<String,String>, String>{
 
+	/**
+	 * Raw/unparsed api response
+	 */
 	private static String rawResponse = null;
+
+	/**
+	 * Hold parsed response in a static to remain in memory in this Lambda
+	 * instance until it is cold started or a new instance is started and then
+	 * re-read and cache again.
+	 */
 	private static String response = null;
+	
+	private ApiCachedClientService service = new SunspotServiceImpl();
 	
 	@Override
 	public String handleRequest(Map<String, String> input, Context context) {
@@ -22,9 +48,19 @@ public class ApiCachedClient implements RequestHandler<Map<String,String>, Strin
 		
 		if(response == null) {
 			//retrieve and parse the response
-			//TODO
+			logger.log("Response not cached yet, retrieving from api url: " + apiUrl);
+			rawResponse = this.service.retreive(apiUrl);
+			logger.log("...retrieved");
+			
+			logger.log("Parsing raw responsed...");
+			response = this.service.parse(rawResponse);
+		}
+		else
+		{
+			logger.log("... response already cached, returning cached response");
 		}
 		
+		logger.log("Parsed response: " + response);
 		
 		return response;
 	}
