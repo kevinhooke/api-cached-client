@@ -3,6 +3,9 @@
  */
 package kh.apiclient;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -30,7 +33,10 @@ public class ApiCachedClient implements RequestHandler<Map<String,String>, Strin
 	 * Raw/unparsed api response
 	 */
 	private static String rawResponse = null;
+	
+	private static LocalDateTime timeLastRead;
 
+	private int cacheTTLmins = 30; //default 30
 	/**
 	 * Hold parsed response in a static to remain in memory in this Lambda
 	 * instance until it is cold started or a new instance is started and then
@@ -45,6 +51,12 @@ public class ApiCachedClient implements RequestHandler<Map<String,String>, Strin
 		LambdaLogger logger = context.getLogger();
 		String apiUrl = System.getenv("API_URL");
 		logger.log("ApiCachedClient invoked, API_URL: " + apiUrl);
+		String cacheTTLEnv = System.getenv("CACHE_TTL_MINS");
+		
+		if(cacheTTLEnv != null) {
+			this.cacheTTLmins = Integer.parseInt(cacheTTLEnv);	
+		}
+		logger.log("CACHE_TTL_MINS is: " + this.cacheTTLmins);
 		
 		if(response == null) {
 			//retrieve and parse the response
@@ -54,9 +66,17 @@ public class ApiCachedClient implements RequestHandler<Map<String,String>, Strin
 			
 			logger.log("Parsing raw responsed...");
 			response = this.service.parse(rawResponse);
+			timeLastRead = LocalDateTime.now();
 		}
 		else
 		{
+			logger.log("API last called at: " + timeLastRead.format(DateTimeFormatter.ISO_DATE_TIME));
+			LocalDateTime now = LocalDateTime.now();
+			long minsSinceLastCall = ChronoUnit.MINUTES.between(timeLastRead, now);
+			logger.log("... mins since last api call: " + minsSinceLastCall);
+			
+			//TODO add ttl comparison here
+			
 			logger.log("... response already cached, returning cached response");
 		}
 		
